@@ -25,6 +25,75 @@ if runmode = 3 { //Hover
     sas on.
     }
 
+if runmode = 10 { //Launch from the pad
+    set TVAL to 0.1.
+    sas off. RCS off. gear off. lights on.
+    wait 1.
+    stage.
+    wait 1.
+    set TVAL to TWRTarget/TWR.
+    wait 0.75.
+    stage.
+    set runmode to 11.
+    }
+
+if runmode = 11 { //Launch
+    run orientvector(UP). 
+    set TVAL to TWRTarget/TWR.
+
+    if verticalspeed > 60 {
+        set runmode to 12.
+        }
+    }
+if runmode = 12 { // Initial climb
+    set TVAL to TWRTarget/TWR.
+    if ALTITUDE < atmoHeight {
+        set tPITCH to max(3, 90 * (1-ALT:RADAR/50000)).
+        }
+    else {
+        set tPITCH to 2.
+        }
+    lock steering to heading(90, tPITCH).
+    if SHIP:APOAPSIS > atmoHeight{
+	    set RUNMODE to 13.
+        }
+    else if SHIP:APOAPSIS > tAP{
+        set RUNMODE to 14.
+        }
+    }
+
+if runmode = 13 { // Burn to raise Ap while in space
+    set TVAL to TWRTarget/TWR.
+    set tPITCH to 2.
+    lock steering to heading(90, tPITCH).
+
+    if SHIP:APOAPSIS > tAP{
+        set RUNMODE to 14.
+        }
+    }
+
+if runmode = 14 { // Coast to AP
+    set TVAL to 0.
+    set tPITCH to 3.
+    lock steering to heading(90, tPITCH).
+
+    if ETA:APOAPSIS < 10 or VERTICALSPEED < 0{
+        set RUNMODE to 15.
+        }
+    }
+
+if runmode = 15 { // Burn to raise Pe
+    set TVAL to TWRTarget/TWR.
+    set tPITCH to 3.
+    lock steering to heading(90, tPITCH).
+
+    if SHIP:PERIAPSIS > tPe * 0.95{
+        set RUNMODE to 0.
+        panels on.
+        set TVAL to 0.
+        }
+    }
+
 if runmode = 30 { //Cruise
 
     run orientvector(V(0,0,0) - VELOCITY:SURFACE:VEC). 

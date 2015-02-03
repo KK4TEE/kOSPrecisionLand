@@ -8,7 +8,10 @@ set shipHeight to 10.3 - 1. //Grasshopper Mk 1
 set maxGeeTarget to 3.
 
 
-
+//Launch Parameters
+set tAP to 250000.
+set tPe to 250000.
+set atmoHeight to 70000.
 
 
 set GRAVITY to (constant():G * body:mass) / body:radius^2.
@@ -29,7 +32,7 @@ set ENGINESAFETY to 1. //Engage engine safety
 
     SET pitchE0 TO 0.
     SET yawE0 TO 0.
-
+    SET rollE0 TO 0.
 //the following are all vectors, mainly for use in the roll, pitch, and angle of attack calculations
 lock rightrotation to ship:facing*r(0,90,0).
 lock right to rightrotation:vector. //right and left are directly along wings
