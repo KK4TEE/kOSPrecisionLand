@@ -16,4 +16,4 @@
     set ov_pitchAngle TO cos(vectorAngle)*facingAngle.
     set yawAngle TO sin(vectorAngle)*facingAngle.
 
-
+//max(-25, min(25, 

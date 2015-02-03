@@ -1,9 +1,34 @@
 //Set variables dynamically based on planatary body
+
+
+//SHIP CONFIGURATION
+//set shipHeight to 6.3 - 1.  //Mars Decent Vehicle
+set shipHeight to 10.3 - 1. //Grasshopper Mk 1
+//set shipHeight to 1.2 - 1. //Dragon Capsule
+set maxGeeTarget to 3.
+
+
+
+
+
 set GRAVITY to (constant():G * body:mass) / body:radius^2.
+set maxGeeTarget to maxGeeTarget * 9.809765 / GRAVITY.
 set NORTHPOLE to latlng( 90, 0).
 set KSCLAUNCHPAD to latlng(-0.0972092543643722, -74.557706433623).
 lock shipLatLng to SHIP:GEOPOSITION.
-lock TWR to MAXTHRUST / (MASS*GRAVITY).
+lock surfaceElevation to shipLatLng:TERRAINHEIGHT.
+lock TWR to MAX( 0.001, MAXTHRUST / (MASS*GRAVITY)).
+lock TWRTarget to min( TWR * 0.90, maxGeeTarget).
+lock totalSpeed to SURFACESPEED + ABS(VERTICALSPEED).
+lock betterALTRADAR to max( 0.1, ALTITUDE - surfaceElevation - shipHeight).
+lock impactTime to betterALTRADAR / -VERTICALSPEED.
+lock killTime to (totalSpeed/GRAVITY) / (TWRTarget).
+set t0 to TIME:SECONDS. //Previous loop time
+set ENGINESAFETY to 1. //Engage engine safety
+
+
+    SET pitchE0 TO 0.
+    SET yawE0 TO 0.
 
 //the following are all vectors, mainly for use in the roll, pitch, and angle of attack calculations
 lock rightrotation to ship:facing*r(0,90,0).

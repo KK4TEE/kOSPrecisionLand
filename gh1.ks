@@ -3,7 +3,7 @@ print "Grasshopper Test Vehicle - Launching".
 RUN gyroinit.ks.
 RUN logtofileinit.ks.
 
-set RUNMODE to 4.
+set RUNMODE to 30.
 if ALT:RADAR < 50 {set RUNMODE to 1. STAGE.}
 
 sas off.
@@ -11,14 +11,26 @@ rcs on.
 lights on.
 when alt:radar > 20 then { gear off.}
 set TVAL to 0.
+//lock throttle to (TVAL - 0.24632) * 0.75368. 
 lock throttle to TVAL.
-on AG1 { set runmode to 4. sas off.}
+on AG1 { set runmode to 50. sas off.}
+on AG10 { set runmode to 80. sas off.}
 
-SET pitchP TO 0.12.
-    SET pitchD TO 0.2.
+set kpAmount to 0.5.
+set kuAmount to 0.5.
+set tuAmount to 5.
+set gainAmount to 0.05.
+set pamount to gainAmount * kuAmount * 0.8.
+set damount to gainAmount * kuAmount * tuAmount / 8. //375.
+
+set pamount to 0.05.
+set damount to 0.04.
+
+    SET pitchP TO pamount.
+    SET pitchD TO damount.
      
-    set yawP TO 0.12.
-    set yawD TO 0.2.
+    set yawP TO pamount.
+    set yawD TO damount.
 set vcProd to V(0,0,0).
 
 

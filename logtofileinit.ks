@@ -1,7 +1,7 @@
 //Setup logging files
 print "Deleting previous log...".
 print "Press CTRL-C to abort".
-wait 2.
+wait 0.1.
 set nextLogTime to time.
 log "Time" to koslog.csv.
 delete koslog.csv.
