@@ -98,11 +98,14 @@ if runmode = 30 { //Cruise
 
     run orientvector(V(0,0,0) - VELOCITY:SURFACE:VEC). 
     
-    if KSCLAUNCHPAD:DISTANCE < 30000{
+    if KSCLAUNCHPAD:DISTANCE < 60000{ //30000 is the most tested value
         set runmode to 50.
         }
     else if (KSCLAUNCHPAD:DISTANCE > 2 * betterALTRADAR) and SURFACESPEED < 500 {
         set runmode to 80.
+        }
+    else {
+        run rollcontrol(0).
         }
     }
 

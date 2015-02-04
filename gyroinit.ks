@@ -3,8 +3,8 @@
 
 //SHIP CONFIGURATION
 //set shipHeight to 6.3 - 1.  //Mars Decent Vehicle
-set shipHeight to 10.3 - 1. //Grasshopper Mk 1
-//set shipHeight to 1.2 - 1. //Dragon Capsule
+//set shipHeight to 10.3 - 1. //Grasshopper Mk 1
+set shipHeight to 1.2 - 1. //Dragon Capsule
 set maxGeeTarget to 3.
 
 
