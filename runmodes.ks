@@ -1,64 +1,53 @@
 //RUNMODES
 
 if runmode = 1 { //Launch
-    run orientvector(UP). 
-    set TVAL to 1.
-
-    if alt:radar > 150{
-        set runmode to 2.
-        set TVAL to (0.2 / TWR / sin(pitchangle)).
-        sas off.
-        }
-    }
-
-if runmode = 2 { //Wait until the ship stops climbing
-    run orientvector(UP).
-    if verticalspeed < 0 {
-        set runmode to 3.
-        gear on.
-        }
-    }
-
-if runmode = 3 { //Hover
-    set TVAL to (1 / TWR / sin(pitchangle)).
-    //run orientvector(UP). 
-    sas on.
-    }
-
-if runmode = 10 { //Launch from the pad
     set TVAL to 0.1.
     sas off. RCS off. gear off. lights on.
     wait 1.
-    stage.
+    //stage.
     wait 1.
     set TVAL to TWRTarget/TWR.
     wait 0.75.
-    stage.
+    //stage.
     set runmode to 11.
     }
 
 if runmode = 11 { //Launch
     run orientvector(UP). 
-    set TVAL to TWRTarget/TWR.
+    //set TVAL to TWRTarget/TWR. //Run engines at a target of 90%
+    set TVAL to 1. //MOAR POWER!!!!1!
 
     if verticalspeed > 60 {
         set runmode to 12.
         }
     }
 if runmode = 12 { // Initial climb
-    set TVAL to TWRTarget/TWR.
+    //set TVAL to TWRTarget/TWR. //Run engines at a target of 90%
+    set TVAL to 1. //MOAR POWER!!!!1!
     if ALTITUDE < atmoHeight {
-        set tPITCH to max(3, 90 * (1-ALT:RADAR/50000)).
+        set tPITCH to max(3, 90 * (1-(ALT:RADAR-1000)/50000)).
         }
     else {
         set tPITCH to 2.
         }
-    lock steering to heading(90, tPITCH).
+    set pitchUPVector to UP:VEC.
+    set pitchUPVector:MAG to 1.
+    set dueEastLATLNG to LATLNG(shipLatLng:LAT, shipLatLng:LNG + 1).
+    set dueEastVEC to dueEastLATLNG:ALTITUDEPOSITION(ALTITUDE + tPITCH^3.8 / 250).
+    set dueEastVEC:MAG to 1.
+    set vcProd to pitchUPVector + dueEastVEC:NORMALIZED. 
+    run orientvector(dueEastVEC).
+    //lock steering to heading(90, tPITCH).
+    print "tPitch: " + tPITCH at ( 0,35).
+    
     if SHIP:APOAPSIS > atmoHeight{
 	    set RUNMODE to 13.
         }
     else if SHIP:APOAPSIS > tAP{
         set RUNMODE to 14.
+        }
+    if stage:Liquidfuel < 1200 {
+        set runmode to 19.
         }
     }
 
@@ -93,7 +82,106 @@ if runmode = 15 { // Burn to raise Pe
         set TVAL to 0.
         }
     }
+    
+if runmode = 18 { //Simple fuel check
+    if stage:Liquidfuel < 1200 {
+        set runmode to 19.
+        }
+    }
+    
+if runmode = 19 { //Stage for reusable first stage
+    set TVAL to 0. 
+    rcs on.
+    wait 1.
+    stage.
+    toggle ag3.
+    SET SHIP:CONTROL:FORE to -1. // Seperate from the upper stage
+    wait 3.
+    SET SHIP:CONTROL:FORE to 0.
+    set runmode to 20.
+    }
 
+
+
+	
+if runmode = 20 { //Boost Back
+    rcs on.
+    set BoostBackVector to KSCLAUNCHPAD:ALTITUDEPOSITION(KSCLAUNCHPAD:TERRAINHEIGHT + ALTITUDE *1.05).
+    run orientvector(BoostBackVector:VEC).
+    
+    if VANG( BoostBackVector, fore) < 25 {
+        set TVAL to 1 / TWR * 3.
+        }
+    else {
+        set TVAL to 0.
+        }
+
+    set SurfaceVelocityV to VELOCITY:SURFACE.
+    if SurfaceVelocityV:MAG  > BoostBackVector:MAG / 55 and VANG( BoostBackVector, VELOCITY:SURFACE) < 18{ 
+        set TVAL to 0. 
+        set runmode to 21.
+        }
+    else if stage:Liquidfuel < 300 {
+        //Low fuel alert!!!
+        set TVAL to 0.
+        set runmode to 26. //Emergency Landing!
+        }
+        
+    }
+    
+    
+if runmode = 21 { //Coast to the boost back complete target
+    set TVAL to 0.
+    run orientvector(VELOCITY:SURFACE * -1).
+    if KSCLAUNCHPAD:DISTANCE < 20000{ //30000 is the most tested value
+        set runmode to 50.
+        }
+    }  
+    
+    
+if runmode = 26 { // Coast until the ETA of slamming into the ground < 10 seconds
+    panels off.
+    set SHIP:CONTROL:NEUTRALIZE to TRUE.
+    lock STEERING to velocity:surface * -1. //Point retrograde relative to surface velocity
+    set TVAL to 0.
+    if ALTITUDE > 70000 {
+        wait 1. //Wait to make sure the ship is stable
+        SET WARP TO 3. //Be really careful about warping
+        }
+    else if ALTITUDE < 70000 and WARP > 0 {
+        SET WARP TO 0. // Make sure we don't time warp through the atmosphere
+        }
+    if impactTime < 100 and verticalspeed < -1 and betterALTRADAR < 5000{
+        set runmode to 27.
+        }
+    } 
+
+if runmode = 27 { // Land on the ground
+    set SHIP:CONTROL:NEUTRALIZE to TRUE.
+    lock STEERING to velocity:surface * -1.//Point retrograde relative to surface velocity
+    set landingRadar to min(ALTITUDE, betterALTRADAR).
+    // Use whichever says our altitude is lower
+    //This is useful in case we overshoot the KSC and need to land in the ocean.
+    set TVAL to (1 / TWR) - (verticalspeed + max(5, min (250, landingRadar^1.08 / 8)) ) / 3 / TWR.
+    gear on.
+    // Here we set the throttle to hover using a Thrust to weight ratio of one to counter act gravity
+    // Then we modify the throttle by the error between the speed we want to be at (based on altitude)
+    // and the speed we are currently at, then divide it by three to smooth it out and then divide it again
+    // by the TWR to automatically customize it for each ship.
+    //
+    if betterALTRADAR < 30 and ABS(VERTICALSPEED) < 1 {
+        lock throttle to 0.
+        set SHIP:CONTROL:NEUTRALIZE to TRUE.
+        lock steering to up.
+        print "LANDED!".
+        wait 2.
+        set runmode to 0.
+        } 
+    }
+    
+    
+    
+    
 if runmode = 30 { //Cruise
 
     run orientvector(V(0,0,0) - VELOCITY:SURFACE:VEC). 
@@ -112,7 +200,8 @@ if runmode = 30 { //Cruise
 if runmode = 50 { ///Let the fun begin. Get back to the pad.
     set LZDistCUTOFFshort to 100.
     set LZDistCUTOFFlong to 1000.
-    set LZTargetAltitude to MIN(40000, MIN(betterALTRADAR - 35 , 200 + KSCLAUNCHPAD:DISTANCE / 4)).
+    //set LZTargetAltitude to MIN(40000, MIN(betterALTRADAR - 35 , 200 + KSCLAUNCHPAD:DISTANCE / 4)).
+    set LZTargetAltitude to MIN(40000, (KSCLAUNCHPAD:DISTANCE / 4) - 35).
     sas off.
     //set LZVECMODED to KSCLAUNCHPAD:POSITION:VEC. // no longer :NORMALIZED
 
@@ -158,9 +247,9 @@ if runmode = 50 { ///Let the fun begin. Get back to the pad.
     //Throttle
     //set TVAL to 0.1/TWR.
     if sin(pitchangle) > 0{
-        set tFALLSPEED to max(2, min (500, ((betterALTRADAR+5)^0.7))).
+        set tFALLSPEED to max(2, min (500, ((betterALTRADAR-0)^0.7))).
 
-        set TVAL to max( 0.1/TWR, (MIN(1.5/TWR, (1 / TWR)/ sin(pitchangle))) - ((verticalspeed + tFALLSPEED)/20  )).
+        set TVAL to max( 0.1/TWR, (MIN(1.5/TWR, (1 / TWR)/ sin(pitchangle))) - ((verticalspeed + tFALLSPEED)/10  )).
         print "Base Fall Spd: " + round(tFALLSPEED, 2) + "       " at (5,33).
         }
     if VANG( VCPROD, fore) < 20 {
