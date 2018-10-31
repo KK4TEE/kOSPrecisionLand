@@ -8,7 +8,7 @@ print "KK Test Article".
 set steeringData to ORIENTTOVECTOR_INIT(0.05, 0.05, 0.3).
 GYROINIT( 25.48, 3). //Set the ship height, maxTargetGeeforce
 LOGTOFILEINIT(). //Logging is not yet functional
-set RUNMODE to 19.
+set RUNMODE to 1.
 set BoostBackTimelimit to 145.//The amount of time it should take to coast back
     //horizontally after the boost back burn is complete.
     //TODO: THIS MUST BE REPROGRAMED TO RUN DYNAMICALLY. THERE ARE TOO MANY OTHER VARIABLES TO PROGRAM THIS STATICALLY
