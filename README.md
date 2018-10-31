@@ -14,6 +14,21 @@ Instructions:
   * If you're on the pad it will launch the rocket like a normal mission, otherwise it will attempt a final landing sequence. 
   * Take a look at [runmodes.ks](runmodes.ks) to see the various modes it runs in. Be sure to set a target ship to land on before running the latest code, or change the "landingtargetLATLNG" variable in [library.ks](library.ks) function "GYROINIT" to your LAT/LNG of choice. Enjoy!
 
+Note: This script was written with an old version of kOS and Kerbal Space Program, circa 2015. It will take some work to update to the current versions of both, and likely is not functional at all on the current version.
+
+System Organization:
+  * [barge.ks](barge.ks) is the primary flight and landing program.
+    * It initializes the variables and is the 'main loop' of the program
+  * [runmodes.ks](runmodes.ks) is the logic of each flight mode
+    * Runs functions through a series of checkpoints, ensuring that each phase of flight is executed in the proper order
+    * There are comments in line, and you can follow along with how the rocket operates step by step
+  * [test.ks](test.ks) is a readout test program that assists with experimenting
+    * Able to run during manual flight or on a seperate kOS unit, this program tests the instrumentation readouts
+  * [bb.ks](OLD-LaunchPad-Landing/bb.ks) - "Boost Back" launchpad landing
+    * An earlier version of the program, the files in the OLD folder land the 1st stage back at the launchpad
+    * Note, this is an even older version of the program and even less tested. For reference only.
+
+
 TODO:
   * Update to run in modern versions of kOS and Kerbal Space Program
   * Convert [runmodes.ks](runmodes.ks) to use the new functions abilities in kOS
